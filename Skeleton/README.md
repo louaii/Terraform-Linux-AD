@@ -1,4 +1,4 @@
-# Terraform AWS + Linux AD Repo Skeleton
+# Terraform AWS + Linux AD Skeleton
 
 
 ```
@@ -68,4 +68,5 @@ terraform-aws-linux-ad/
 * All `.tf` files are placeholders for now.
 * `scripts/` contains shell scripts for AD and Bastion setup.
 * `diagrams/` folder is for images you create later.
+
 
