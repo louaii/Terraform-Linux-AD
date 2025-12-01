@@ -27,27 +27,27 @@ variable "aws_region" {
 # Backend Infrastructure Resources
 # ------------------------------
 
-#reached here
+#Storage Container
 # S3 bucket for remote backend TF state
-resource "aws_s3_bucket" "tf_state" {
-  bucket = "myproject-tfstate-envs"
+#resource "type" "name" ==> locally in the code
+#       bucket = "name" ==> on aws
+resource "aws_s3_bucket" "state" {
+  bucket = "s3-state"
 }
 
-# Enable versioning on S3 bucket
-resource "aws_s3_bucket_versioning" "tf_state_versioning" {
-  bucket = aws_s3_bucket.tf_state.id
-
+# Enable versioning on S3 bucket ==> every change makes a new snapshot(History of changes like in git)
+resource "aws_s3_bucket_versioning" "state_versioning" {
+  bucket = aws_s3_bucket.state.id
   versioning_configuration {
     status = "Enabled"
   }
 }
 
 # DynamoDB table for Terraform state locking
-resource "aws_dynamodb_table" "tf_locks" {
-  name         = "myproject-tfstate-locks-envs"
-  billing_mode = "PAY_PER_REQUEST"
-  hash_key     = "LockID"
-
+resource "aws_dynamodb_table" "db_locks" {
+  name         = "state-locks-envs"
+  billing_mode = "PAY_PER_REQUEST" #pay_on_request
+  hash_key     = "LockID" #primary_key
   attribute {
     name = "LockID"
     type = "S"
