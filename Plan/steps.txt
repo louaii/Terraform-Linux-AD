@@ -1,3 +1,2 @@
-✅ Start implementing PHASE 2 (backend infrastructure)
 ✅ Create a backend.tf draft
 ✅ Create the next document for Samba provisioning plan

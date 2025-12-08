@@ -1,0 +1,46 @@
+🔥 This keeps everything FREE
+
+1 EC2 instance → free tier
+
+No NAT Gateway
+
+No private subnets
+
+No extra charges
+
+🧩 New Phase 3 Plan (Free Tier Version)
+Step 1 — Build Free VPC
+
+1 VPC
+
+1 Public Subnet
+
+1 Internet Gateway
+
+1 Route Table
+
+Step 2 — Security Groups
+
+Allow SSH from YOUR IP
+
+Allow AD ports (LDAP, Kerberos, DNS)
+
+Step 3 — Free-Tier EC2 Instance
+
+Ubuntu 22.04
+
+t2.micro
+
+Public IP attached
+
+User-data for installing Samba
+
+Step 4 — Outputs
+
+Public IP
+
+Private IP
+
+VPC ID
+
+Subnet ID
