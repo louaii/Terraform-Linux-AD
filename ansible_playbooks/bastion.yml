@@ -1,0 +1,26 @@
+---
+- name: Bastion Host Provisioning
+  hosts: localhost
+  connection: local
+  gather_facts: no
+  vars_files:
+    - group_vars/linux_ad.yml
+
+  tasks:
+    - name: Launch Bastion EC2 instance
+      amazon.aws.ec2_instance:
+        name: "bastion-host"
+        key_name: "{{ bastion_key_name }}"
+        instance_type: "{{ bastion_instance_type }}"
+        image_id: "{{ bastion_ami }}"
+        wait: yes
+        vpc_subnet_id: "10.0.1.0/24"  
+        assign_public_ip: yes
+        security_groups: ["linux-ad-sg"]
+      register: bastion_instance
+
+    - debug:
+        msg: "Bastion public IP: {{ bastion_instance.public_ip_address }}"
+
+#run
+#ansible-playbook -i host.ini bastion.yml

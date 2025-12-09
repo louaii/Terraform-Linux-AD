@@ -1,72 +1,45 @@
-# Terraform AWS + Linux AD Skeleton
+# Linux-AD Project Structure
+
+This directory outlines the skeleton structure of the **Linux-AD** project, including Terraform modules and Ansible playbooks.
+
+## Directory Layout
+linux-ad/
+├─ README.md # Main project documentation
+├─ envs/ # Terraform modules
+│ ├─ backend/ # S3 + DynamoDB backend
+│ ├─ linux_ad.tf # EC2 instance + Linux AD
+│ ├─ network.tf # VPC, subnet, IGW, route tables, SG
+│ ├─ outputs.tf
+│ └─ variables.tf # Terraform variables
+├─ ansible/ # Ansible playbooks
+│ ├─ inventory.ini # Hosts inventory
+│ ├─ active_directory.yml # Phase 4: Linux AD validation
+│ ├─ bastion.yml # Phase 5: Bastion host provisioning
+│ ├─ kerberos.yml # Kerberos testing
+│ ├─ samba.yml # Samba AD tests
+│ └─ group_vars/linux_ad.yml # Shared variables for Ansible
+├─ structure/ # Project skeleton
+│ └─ README.md # This file
 
 
-```
-terraform-aws-linux-ad/
-│
-├── backend/
-│   ├── backend.tf                # Terraform backend (S3 + DynamoDB)
-│   └── README.md                 # Backend setup instructions
-│
-├── envs/
-│   ├── dev/
-│   │   ├── main.tf               # Orchestration file for dev environment
-│   │   ├── variables.tf
-│   │   ├── outputs.tf
-│   │   └── terraform.tfvars      # Dev environment variables
-│   │
-│   └── prod/                     # Future production environment
-│       ├── main.tf
-│       ├── variables.tf
-│       ├── outputs.tf
-│       └── terraform.tfvars
-│
-├── modules/
-│   ├── vpc/
-│   │   ├── main.tf               # VPC: subnets, routes, IGW, SGs
-│   │   ├── variables.tf
-│   │   └── outputs.tf
-│   │
-│   ├── bastion/
-│   │   ├── main.tf               # Bastion EC2 host (public)
-│   │   ├── variables.tf
-│   │   └── outputs.tf
-│   │
-│   ├── ad_dc/
-│   │   ├── main.tf               # Active Directory Domain Controller (Samba)
-│   │   ├── variables.tf
-│   │   └── outputs.tf
-│   │
-│   ├── monitoring/               # Optional module (Zabbix/LibreNMS)
-│   │   ├── main.tf
-│   │   ├── variables.tf
-│   │   └── outputs.tf
-│   │
-│   └── s3_state/                 # Optional module for backend
-│       ├── main.tf
-│       ├── variables.tf
-│       └── outputs.tf
-│
-├── scripts/
-│   ├── samba/
-│   │   ├── install_samba.sh      # Install Samba on AD DC
-│   │   ├── provision_domain.sh   # Provision corp.local domain
-│   │   └── join_domain.sh        # Join Linux servers to domain
-│   │
-│   └── bastion/
-│       ├── setup_tools.sh        # Install tools on bastion host
-│
-├── diagrams/
-│   ├── network-topology.png      # To be created
-│   ├── ad-architecture.png       # To be created
-│   └── routing-logic.png         # To be created
+---
 
-```
+## Purpose
 
-### Notes:
+This skeleton helps maintain a **modular and organized structure**, separating:
 
-* All `.tf` files are placeholders for now.
-* `scripts/` contains shell scripts for AD and Bastion setup.
-* `diagrams/` folder is for images you create later.
+- **Infrastructure**: Terraform modules for backend, network, and Linux AD
+- **Configuration Management**: Ansible playbooks for AD, Kerberos, Samba, bastion host
+- **Variables**: Centralized variable definitions and group vars
+- **Documentation**: README and project plans
+
+---
+
+## Key Notes
+
+- Terraform backend uses **S3 bucket + DynamoDB** for state management.
+- EC2 instances are configured for Linux Active Directory and are free-tier compatible.
+- Ansible automates **AD deployment, validation, and extended testing**.
+- Bastion host is provisioned separately for secure SSH access.
 
 

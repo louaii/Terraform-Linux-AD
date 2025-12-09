@@ -1,0 +1,24 @@
+---
+# Linux AD Phase 5 shared variables
+
+# Bastion host
+bastion_instance_type: "t2.micro"
+bastion_ami: "ami-0fa91bc90632c73c9"   
+bastion_key_name: "linux-ad-key"
+bastion_cidr: "0.0.0.0/0"              
+
+# AD users
+phase5_test_users:
+  - username: "user1"
+    password: "UserPass123!"
+  - username: "user2"
+    password: "UserPass456!"
+
+# AD groups
+phase5_test_groups:
+  - "Developers"
+  - "Admins"
+  
+
+#run
+#ansible-playbook -i host.ini linux_ad.yml

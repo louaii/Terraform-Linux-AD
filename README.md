@@ -1,14 +1,15 @@
-# Terraform AWS + Linux Active Directory Network Architecture
+# Terraform + Ansible AWS Linux Active Directory Network Architecture
 
 ## Overview
 
-This project provides a **fully-documented network architecture** for deploying a free-tier friendly IT infrastructure on AWS using **Terraform**, featuring:
+This project provides a **fully-documented network architecture** for deploying a free-tier friendly IT infrastructure on AWS using **Terraform** and **Ansible**, featuring:
 
 * **Linux-based Active Directory (Samba AD DC)**
 * **Private subnets for servers**
 * **Public subnet for bastion access**
 * **AWS VPC, routing, security groups**
 * **EC2 instances sized for AWS Free Tier** (t2.micro/t3.micro)
+* **Configuration management and validation using Ansible**
 
 This README serves as the **official documentation and planning file** for the network architecture.
 
@@ -16,10 +17,10 @@ This README serves as the **official documentation and planning file** for the n
 
 ## 📌 Goals
 
-* Build a realistic corporate IT environment **fully automated with Terraform**.
+* Build a realistic corporate IT environment **fully automated with Terraform and Ansible**.
 * Simulate an on-premise-style network in AWS **at zero or minimal cost**.
-* Include a domain controller, management server, and monitoring server.
-* Provide a clean design that can be easily extended.
+* Include a domain controller, bastion host, and optional monitoring server.
+* Provide a clean, modular design that can be easily extended.
 
 ---
 
@@ -73,11 +74,11 @@ A large CIDR to allow future expansion.
 
 ### 4. **EC2 Instances**
 
-| Server                       | OS                  | Purpose                | Size (Free Tier) |
-| ---------------------------- | ------------------- | ---------------------- | ---------------- |
-| Bastion Host                 | Amazon Linux 2023   | SSH to private servers | t2.micro         |
-| AD Domain Controller         | Ubuntu Server 22.04 | Samba AD DC            | t2.micro         |
-| Monitoring Server (Optional) | Ubuntu              | Zabbix/LibreNMS        | t2.micro         |
+| Server                       | OS                  | Purpose                |
+| ---------------------------- | ------------------- | ---------------------- |
+| Bastion Host                 | Amazon Linux 2023   | SSH to private servers |
+| AD Domain Controller         | Ubuntu Server 22.04 | Samba AD DC            |
+| Monitoring Server (Optional) | Ubuntu              | Zabbix/LibreNMS        |
 
 ### 5. **Security Groups**
 
@@ -117,19 +118,23 @@ Minimal IAM usage:
 
 The plan uses Samba as a full AD Domain Controller.
 
-### AD Domain Details
-
-* Domain Name: **corp.local**
-* NETBIOS Name: **CORP**
-* Functional Level: Windows Server 2012R2 compatible
-* DNS Server: Samba internal DNS
-
 ### Domain Services Provided
 
 * DNS
 * Kerberos
 * LDAP
 * SMB shares (optional)
+
+---
+
+### Ansible Automation
+
+* **active_directory.yml**: system checks, Samba AD validation, DNS/Kerberos tests
+* **bastion.yml**: Bastion host provisioning
+* **kerberos.yml**: Kerberos ticket acquisition and validation
+* **samba.yml**: User creation and Samba AD management
+* Inventory: `inventory.ini`
+* Group variables: `group_vars/linux_ad.yml`
 
 ---
 
@@ -146,16 +151,23 @@ Workstations can be added later using EC2 Windows instances (paid) or local VMs 
 ## 🗂️ Terraform Structure (Recommended)
 
 ```
-├── main.tf
-├── variables.tf
-├── outputs.tf
-├── modules/
-│   ├── vpc/
-│   ├── bastion/
-│   ├── ad_dc/
-│   └── monitoring/
-└── README.md
-```
+linux-ad/
+├─ README.md #This file
+├─ envs/ # Terraform modules
+│ ├─ backend/ # S3 + DynamoDB backend
+│ ├─ linux_ad.tf # EC2 instance + Linux AD
+│ ├─ network.tf # VPC, subnet, IGW, route tables, SG
+│ ├─ outputs.tf
+│ └─ variables.tf # Terraform variables
+├─ ansible/ # Ansible playbooks
+│ ├─ inventory.ini # Hosts inventory
+│ ├─ active_directory.yml # Phase 4: Linux AD validation
+│ ├─ bastion.yml # Phase 5: Bastion host provisioning
+│ ├─ kerberos.yml # Kerberos testing
+│ ├─ samba.yml # Samba AD tests
+│ └─ group_vars/linux_ad.yml # Shared variables for Ansible
+├─ structure/ # Project skeleton
+│ └─ README.md 
 
 ---
 

@@ -1,0 +1,29 @@
+---
+- name: Kerberos/DNS Extended Validation
+  hosts: linux_ad
+  become: yes
+  vars_files:
+    - group_vars/linux_ad.yml
+
+  tasks:
+    - name: Test Kerberos ticket for all AD users
+      loop: "{{ phase5_test_users }}"
+      shell: echo "{{ item.password }}" | kinit {{ item.username }}
+      register: kinit_test
+      ignore_errors: yes
+
+    - debug:
+        msg: "{{ kinit_test.results }}"
+
+    - name: Test DNS SRV records for LDAP and Kerberos
+      shell: |
+        host -t SRV _ldap._tcp.$(hostname -d)
+        host -t SRV _kerberos._tcp.$(hostname -d)
+      register: dns_srv_test
+      ignore_errors: yes
+
+    - debug:
+        msg: "{{ dns_srv_test.stdout_lines }}"
+
+#run
+#ansible-playbook -i host.ini kerberos.yml

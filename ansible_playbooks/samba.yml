@@ -1,0 +1,152 @@
+---
+- name: Samba AD deploy & validate (single-file playbook)
+  hosts: linux_ad
+  become: yes
+  vars:
+    # set these either here (fast) or via ansible-vault / --extra-vars
+    samba_realm: "LOUAY.COM"
+    samba_domain: "LOUAY"
+    samba_admin_user: "administrator"
+    # >>> REPLACE the password below or use ansible-vault / --extra-vars
+    samba_admin_password: "!@#AdminPassword123!@#"
+    test_user_name: "testuser"
+    test_user_pass: "User12345@123"
+
+  tasks:
+    - name: Ensure apt cache is up to date
+      apt:
+        update_cache: yes
+        cache_valid_time: 3600
+
+    - name: Install required packages
+      apt:
+        name:
+          - samba
+          - smbclient
+          - krb5-user
+          - winbind
+          - dnsutils
+          - acl
+          - attr
+          - sssd
+          - chrony
+        state: present
+        install_recommends: no
+
+    - name: Stop any running samba-related services (ignore errors)
+      service:
+        name: "{{ item }}"
+        state: stopped
+        enabled: no
+      loop:
+        - smbd
+        - nmbd
+        - winbind
+        - samba-ad-dc
+      ignore_errors: yes
+
+    - name: Check if Samba AD already provisioned
+      command: samba-tool domain level show
+      register: samba_check
+      failed_when: false
+      changed_when: false
+
+    - name: Provision Samba AD domain (when not provisioned)
+      command: >
+        samba-tool domain provision
+        --use-rfc2307={{ true | ternary("yes","no") }}
+        --realm={{ samba_realm }}
+        --domain={{ samba_domain }}
+        --server-role=dc
+        --dns-backend=SAMBA_INTERNAL
+        --adminpass={{ samba_admin_password }}
+      when: "'Domain functionality' not in samba_check.stdout"
+      args:
+        warn: false
+
+    - name: Ensure samba-ad-dc service enabled & started
+      service:
+        name: samba-ad-dc
+        enabled: yes
+        state: started
+
+    - name: Write /etc/krb5.conf to match the realm (idempotent)
+      copy:
+        dest: /etc/krb5.conf
+        content: |
+          [libdefaults]
+            default_realm = {{ samba_realm | upper }}
+            dns_lookup_realm = false
+            dns_lookup_kdc = false
+            ticket_lifetime = 24h
+            forwardable = true
+
+          [realms]
+            {{ samba_realm | upper }} = {
+              kdc = {{ inventory_hostname }}
+              admin_server = {{ inventory_hostname }}
+            }
+
+          [domain_realm]
+            .{{ samba_realm | lower }} = {{ samba_realm | upper }}
+            {{ samba_realm | lower }} = {{ samba_realm | upper }}
+      notify: restart samba-ad-dc
+
+    - name: Ensure /etc/resolv.conf points to localhost (Samba internal DNS)
+      copy:
+        dest: /etc/resolv.conf
+        content: |
+          nameserver 127.0.0.1
+      notify: restart samba-ad-dc
+
+    - name: Wait for samba-ad-dc to be up (simple wait)
+      wait_for:
+        port: 389
+        host: 127.0.0.1
+        timeout: 60
+      ignore_errors: yes
+
+    - name: Show samba-tool domain info (debug)
+      command: samba-tool domain info localhost
+      register: domain_info
+      failed_when: false
+
+    - debug:
+        msg: "{{ domain_info.stdout | default('no samba info') }}"
+
+    - name: Obtain Kerberos ticket for administrator (test)
+      shell: |
+        echo "{{ samba_admin_password }}" | kinit {{ samba_admin_user }}
+      register: kinit_res
+      failed_when: false
+      ignore_errors: yes
+
+    - debug:
+        msg: "kinit stderr: {{ kinit_res.stderr | default('none') }}"
+
+    - name: Create a test AD user (idempotent)
+      command: samba-tool user create {{ test_user_name }} "{{ test_user_pass }}"
+      register: create_user
+      failed_when: false
+      ignore_errors: yes
+
+    - debug:
+        msg: "{{ create_user.stdout | default('user create returned no output') }}"
+
+    - name: Verify the test user exists
+      command: samba-tool user show {{ test_user_name }}
+      register: verify_user
+      failed_when: false
+      ignore_errors: yes
+
+    - debug:
+        msg: "{{ verify_user.stdout | default('user show returned no output') }}"
+
+  handlers:
+    - name: restart samba-ad-dc
+      service:
+        name: samba-ad-dc
+        state: restarted
+
+#run
+#ansible-playbook -i host.ini samba.yml 

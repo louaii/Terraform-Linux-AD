@@ -1,0 +1,29 @@
+---
+- name: AD Users & Groups
+  hosts: linux_ad
+  become: yes
+  vars_files:
+    - group_vars/linux_ad.yml
+
+  tasks:
+    - name: Create AD groups
+      loop: "{{ phase5_test_groups }}"
+      command: samba-tool group add {{ item }}
+      ignore_errors: yes
+      register: create_groups
+
+    - debug:
+        msg: "{{ create_groups.results }}"
+
+    - name: Create AD users
+      loop: "{{ phase5_test_users }}"
+      command: samba-tool user create {{ item.username }} "{{ item.password }}"
+      ignore_errors: yes
+      register: create_users
+
+    - debug:
+        msg: "{{ create_users.results }}"
+
+
+#run
+#ansible-playbook -i host.ini active_directory.yml
