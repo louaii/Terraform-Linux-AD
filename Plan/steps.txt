@@ -1,2 +1,0 @@
-✅ Create a backend.tf draft
-✅ Create the next document for Samba provisioning plan
